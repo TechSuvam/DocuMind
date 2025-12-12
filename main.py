@@ -71,15 +71,19 @@ def main():
     print("Vector database created successfully.")
 
     # 4. Test Retrieval
-    query = "What is RAG?"
-    print(f"\nTest Query: '{query}'")
-    results = vectorstore.similarity_search(query, k=2)
+    queries = ["What is RAG?", "What are the use cases of Python?"]
     
-    print("\n--- Retrieved Results ---")
-    for i, res in enumerate(results):
-        print(f"\nResult {i+1}:")
-        print(f"Content: {res.page_content}")
-        print(f"Source: {res.metadata.get('source', 'Unknown')}")
+    for query in queries:
+        print(f"\n{'='*40}")
+        print(f"Test Query: '{query}'")
+        print(f"{'='*40}")
+        
+        results = vectorstore.similarity_search(query, k=1)
+        
+        for i, res in enumerate(results):
+            print(f"\nResult {i+1}:")
+            print(f"Source: {res.metadata.get('source', 'Unknown')}")
+            print(f"Content Preview: {res.page_content[:300]}...\n")
 
 if __name__ == "__main__":
     main()
