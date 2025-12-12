@@ -8,3 +8,4 @@ markdown
 transformers
 accelerate
 streamlit
+pypdf

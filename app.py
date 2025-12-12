@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 import glob
-from langchain_community.document_loaders import UnstructuredMarkdownLoader
+from langchain_community.document_loaders import UnstructuredMarkdownLoader, PyPDFLoader
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_huggingface import HuggingFacePipeline
@@ -11,7 +11,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 st.set_page_config(page_title="Local RAG Demo", page_icon="🤖", layout="wide")
 
 st.title("🤖 Local RAG Demo")
-st.markdown("Chat with your Markdown documents purely offline.")
+st.markdown("Chat with your documents (Markdown & PDF) purely offline.")
 
 # --- Backend Logic (Cached) ---
 
@@ -30,26 +30,35 @@ def get_llm():
     )
 
 def load_and_process_documents(directory):
-    """Load documents and update the vector store."""
+    """Load documents from directory and update the vector store."""
     if not os.path.exists(directory):
         os.makedirs(directory)
-        st.warning(f"Created directory: {directory}. Please add .md files there!")
-        return None
-
+        
+    # Get all .md and .pdf files
     md_files = glob.glob(os.path.join(directory, "*.md"))
-    if not md_files:
-        st.warning("No markdown files found in the 'data' directory.")
+    pdf_files = glob.glob(os.path.join(directory, "*.pdf"))
+    all_files = md_files + pdf_files
+    
+    if not all_files:
+        st.warning("No Markdown or PDF files found in the 'data' directory.")
         return None
 
     documents = []
     status_text = st.empty()
-    status_text.text("Loading documents...")
+    status_text.text(f"Found {len(all_files)} files. Loading...")
     
-    for file_path in md_files:
+    for file_path in all_files:
         try:
-            loader = UnstructuredMarkdownLoader(file_path)
+            if file_path.endswith(".md"):
+                loader = UnstructuredMarkdownLoader(file_path)
+            elif file_path.endswith(".pdf"):
+                loader = PyPDFLoader(file_path)
+            else:
+                continue
+                
             docs = loader.load()
             documents.extend(docs)
+            status_text.text(f"Loaded: {os.path.basename(file_path)}")
         except Exception as e:
             st.error(f"Error loading {file_path}: {e}")
 
@@ -85,8 +94,28 @@ def get_vectorstore():
 # --- UI Layout ---
 
 with st.sidebar:
+    st.header("Upload Data")
+    uploaded_files = st.file_uploader("Upload PDF or MD files", type=["pdf", "md"], accept_multiple_files=True)
+    
+    if uploaded_files:
+        if st.button("Process Uploaded Files"):
+            save_dir = "./data"
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            
+            with st.spinner("Saving files..."):
+                for uploaded_file in uploaded_files:
+                    file_path = os.path.join(save_dir, uploaded_file.name)
+                    with open(file_path, "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                st.success(f"Saved {len(uploaded_files)} files to {save_dir}")
+            
+            with st.spinner("Indexing..."):
+                load_and_process_documents(save_dir)
+                
+    st.markdown("---")
     st.header("Settings")
-    if st.button("Re-index Knowledge Base"):
+    if st.button("Re-index Existing Data"):
         with st.spinner("Indexing..."):
             load_and_process_documents("./data")
 
@@ -95,7 +124,7 @@ with st.sidebar:
     if os.path.exists("./chroma_db"):
         st.success("Vector DB Ready")
     else:
-        st.error("Vector DB Missing. Click 'Re-index'.")
+        st.error("Vector DB Missing. Click 'Re-index' or Upload files.")
 
 # Initialize Chat History
 if "messages" not in st.session_state:
