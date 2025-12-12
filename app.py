@@ -8,9 +8,9 @@ from langchain_huggingface import HuggingFacePipeline
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Page Config
-st.set_page_config(page_title="Local RAG Demo", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="DocuMind", page_icon="🧠", layout="wide")
 
-st.title("🤖 Local RAG Demo")
+st.title("🧠 DocuMind")
 st.markdown("Chat with your documents (Markdown & PDF) purely offline.")
 
 # --- Backend Logic (Cached) ---

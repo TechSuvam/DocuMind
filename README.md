@@ -1,4 +1,4 @@
-# Local RAG Demo
+# 🧠 DocuMind (formerly Local RAG Demo)
 
 This is a **Retrieval-Augmented Generation (RAG)** application that runs **completely locally** on your machine. It allows you to chat with your own documents (currently Markdown) using open-source AI models.
 

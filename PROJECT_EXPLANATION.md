@@ -1,4 +1,4 @@
-# 📘 RAG Demo: Detailed Project Explanation
+# 📘 DocuMind: Detailed Project Explanation
 
 This document explains **exactly how this project works**, from the high-level concept to the specific code implementation.
 
